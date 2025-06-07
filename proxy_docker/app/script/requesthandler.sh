@@ -1153,6 +1153,55 @@ main() {
           response=$(elements_unwatchtxidrequest "${watchid}" "${txid}" "${confirmedCallbackURL}" "${xconfCallbackURL}")
           returncode=$?
           ;;
+        elements_createrawtransaction)
+          # POST http://192.168.111.152:8080/elements_createrawtransaction
+          # BODY {"inputs":[{"txid":"b081ca7724386f549cf0c16f71db6affeb52ff7a0d9b606fb2e5c43faffd3387","vout":0}],"outputs":{"2N8DcqzfkYi8CkYzvNNS5amoq3SbAcQNXKp":0.00233}}
+          # BODY {"inputs":[{"txid":"b081ca7724386f549cf0c16f71db6affeb52ff7a0d9b606fb2e5c43faffd3387","vout":0}],"outputs":{"2N8DcqzfkYi8CkYzvNNS5amoq3SbAcQNXKp":0.00233},"locktime":1234,"replaceable":true}
+
+          response=$(elements_createrawtransaction "${line}")
+          returncode=$?
+          ;;
+        elements_decoderawtransaction)
+          # POST http://192.168.111.152:8080/elements_decoderawtransaction
+          # BODY {"hex":"02000000000101b081ca7724386f549cf0c16f71db6affeb52ff7a0d9b606fb2e5c43faffd33870000000000ffffffff01a08601000000000017a914f"}
+
+          response=$(elements_decoderawtransaction "${line}")
+          returncode=$?
+          ;;
+        elements_fundrawtransaction)
+          # POST http://192.168.111.152:8080/elements_fundrawtransaction
+          # BODY {"hex":"02000000000101b081ca7724386f549cf0c16f71db6affeb52ff7a0d9b606fb2e5c43faffd33870000000000ffffffff01a08601000000000017a914f"}
+          # BODY {"hex":"02000000000101b081ca7724386f549cf0c16f71db6affeb52ff7a0d9b606fb2e5c43faffd33870000000000ffffffff01a08601000000000017a914f","options":{"changeAddress":"2N8DcqzfkYi8CkYzvNNS5amoq3SbAcQNXKp"}}
+
+          response=$(elements_fundrawtransaction "${line}")
+          returncode=$?
+          ;;
+        elements_blindrawtransaction)
+          # POST http://192.168.111.152:8080/elements_blindrawtransaction
+          # BODY {"hex":"02000000000101b081ca7724386f549cf0c16f71db6affeb52ff7a0d9b606fb2e5c43faffd33870000000000ffffffff01a08601000000000017a914f"}
+
+          local temp_response=$(mktemp)
+          elements_blindrawtransaction "${line}" > "${temp_response}"
+          returncode=$?
+
+          response=$(cat "${temp_response}")
+          rm "${temp_response}"
+          ;;
+        elements_signrawtransaction)
+          # POST http://192.168.111.152:8080/elements_signrawtransaction
+          # BODY {"hex":"02000000000101b081ca7724386f549cf0c16f71db6affeb52ff7a0d9b606fb2e5c43faffd33870000000000ffffffff01a08601000000000017a914f"}
+
+          response=$(elements_signrawtransaction "${line}")
+          returncode=$?
+          ;;
+        elements_sendrawtransaction)
+          # POST http://192.168.111.152:8080/elements_sendrawtransaction
+          # BODY {"hex":"02000000000101b081ca7724386f549cf0c16f71db6affeb52ff7a0d9b606fb2e5c43faffd33870000000000ffffffff01a08601000000000017a914f"}
+          # BODY {"hex":"02000000000101b081ca7724386f549cf0c16f71db6affeb52ff7a0d9b606fb2e5c43faffd33870000000000ffffffff01a08601000000000017a914f","maxfeerate":0.00000010}
+
+          response=$(elements_sendrawtransaction "${line}")
+          returncode=$?
+          ;;
         check_bolt11_mrh)
           # POST http://192.168.111.152:8080/check_bolt11_mrh
           # BODY {"bolt11":"lntb1pdca82tpp5gv8mn5jqlj6xztpnt4r472zcyrwf3y2c3cvm4uzg2gqcnj90f83qdp2gf5hgcm0d9hzqnm4w3kx2apqdaexgetjyq3nwvpcxgcqp2g3d86wwdfvyxcz7kce7d3n26d2rw3wf5tzpm2m5fl2z3mm8msa3xk8nv2y32gmzlhwjved980mcmkgq83u9wafq9n4w28amnmwzujgqpmapcr3"}

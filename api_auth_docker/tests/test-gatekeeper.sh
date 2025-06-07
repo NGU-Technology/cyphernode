@@ -611,6 +611,24 @@ test_elements_spender_functions() {
 
   # action_elements_derivepubpath=spender
   test_authorization "elements_derivepubpath" "${token}" ${has_access} || return 65
+
+  # action_elements_createrawtransaction=spender
+  test_authorization "elements_createrawtransaction" "${token}" ${has_access} || return 175
+
+  # action_elements_fundrawtransaction=spender
+  test_authorization "elements_fundrawtransaction" "${token}" ${has_access} || return 180
+
+  # action_elements_blindrawtransaction=spender
+  test_authorization "elements_blindrawtransaction" "${token}" ${has_access} || return 185
+
+  # action_elements_decoderawtransaction=spender
+  test_authorization "elements_decoderaqtransaction" "${token}" ${has_access} || return 190
+
+  # action_elements_signrawtransaction=spender
+  test_authorization "elements_signrawtransaction" "${token}" ${has_access} || return 195
+
+  # action_elements_sendrawtransaction=spender
+  test_authorization "elements_sendrawtransaction" "${token}" ${has_access} || return 200
 }
 
 test_admin_functions() {

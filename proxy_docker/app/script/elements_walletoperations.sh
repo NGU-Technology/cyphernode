@@ -351,3 +351,216 @@ elements_getwalletinfo() {
   send_to_elements_spender_node "${data}" | jq ".result"
   return $?
 }
+
+elements_createrawtransaction() {
+  trace "Entering elements_createrawtransaction()..."
+
+  local request=${1}
+  local inputs=$(echo "${request}" | jq -r ".inputs")
+  trace "[elements_createrawtransaction] inputs=${inputs}"
+  local outputs=$(echo "${request}" | jq -r ".outputs")
+  trace "[elements_createrawtransaction] outputs=${outputs}"
+  local locktime=$(echo "${request}" | jq -r ".locktime // null")
+  trace "[elements_createrawtransaction] locktime=${locktime}"
+  local replaceable=$(echo "${request}" | jq -r ".replaceable // true")
+
+  local response
+
+  local data='{"method":"createrawtransaction","params":['${inputs}','${outputs}','${locktime}','${replaceable}']}'
+
+  response=$(send_to_elements_spender_node "${data}")
+
+  local returncode=$?
+  trace_rc ${returncode}
+  trace "[elements_createrawtransaction] response=${response}"
+
+  if [ "${returncode}" -eq 0 ]; then
+    local rawtx=$(echo ${response} | jq -rc ".result")
+    trace "[elements_createrawtransaction] rawtx=${rawtx}"
+
+    data="{\"hex\":\"${rawtx}\"}"
+  else
+    trace "[elements_createrawtransaction] Couldn't get rawtx!"
+    local message=$(echo "${response}" | jq -e ".error.message")
+    if [ -n "${message}" ]; then
+      data="{\"message\":${message}}"
+    else
+      data="{\"message\":null}"
+    fi
+  fi
+
+  trace "[elements_createrawtransaction] responding=${data}"
+  echo "${data}"
+
+  return ${returncode}
+}
+
+elements_decoderawtransaction() {
+  trace "Entering elements_decoderawtransaction()..."
+
+  local request=${1}
+  local rawtx=$(echo "${request}" | jq -r ".hex")
+  trace "[elements_decoderawtransaction] rawtx=${rawtx}"
+
+  local response
+
+  local data='{"method":"decoderawtransaction","params":["'${rawtx}'"]}'
+
+  response=$(send_to_elements_spender_node "${data}")
+
+  local returncode=$?
+  trace_rc ${returncode}
+  trace "[elements_decoderawtransaction] response=${response}"
+
+  if [ "${returncode}" -eq 0 ]; then
+    local tx=$(echo ${response} | jq -rc ".result")
+    trace "[elements_decoderawtransaction] tx=${tx}"
+
+    data="{\"tx\":${tx}}"
+  else
+    trace "[elements_decoderawtransaction] Couldn't decode tx!"
+    local message=$(echo "${response}" | jq -e ".error.message")
+    if [ -n "${message}" ]; then
+      data="{\"message\":${message}}"
+    else
+      data="{\"message\":null}"
+    fi
+  fi
+
+  trace "[elements_decoderawtransaction] responding=${data}"
+  echo "${data}"
+
+  return ${returncode}
+}
+
+elements_fundrawtransaction() {
+  trace "Entering elements_fundrawtransaction()..."
+
+  local request=${1}
+  local rawtx=$(echo "${request}" | jq -r ".hex")
+  trace "[elements_fundrawtransaction] rawtx=${rawtx}"
+  local options=$(echo "${request}" | jq -r ".options")
+  trace "[elements_fundrawtransaction] options=${options}"
+
+  local response
+
+  local data='{"method":"fundrawtransaction","params":["'${rawtx}'",'${options}']}'
+
+  response=$(send_to_elements_spender_node "${data}")
+
+  local returncode=$?
+  trace_rc ${returncode}
+  trace "[elements_fundrawtransaction] response=${response}"
+
+  if [ "${returncode}" -eq 0 ]; then
+    local data=$(echo ${response} | jq -rc ".result")
+  else
+    local message=$(echo "${response}" | jq -e ".error.message")
+    if [ -n "${message}" ]; then
+      data="{\"message\":${message}}"
+    else
+      data="{\"message\":null}"
+    fi
+  fi
+
+  trace "[elements_fundrawtransaction] responding=${data}"
+
+  echo "${data}"
+
+  return ${returncode}
+}
+
+elements_blindrawtransaction() {
+  trace "Entering elements__blindrawtransaction()..."
+
+  local request=${1}
+  local rawtx=$(echo "${request}" | jq -r ".hex")
+  trace "[elements__blindrawtransaction] rawtx=${rawtx}"
+
+  local response
+
+  local params='{"method":"blindrawtransaction","params":["'${rawtx}'"]}'
+
+  local temp_response=$(mktemp)
+  send_to_elements_spender_node "${params}" > "${temp_response}"
+
+  local returncode=$?
+  trace_rc ${returncode}
+  trace "[elements_blindrawtransaction] response=${response}"
+
+  if [ "${returncode}" -eq 0 ]; then
+    cat "${temp_response}"
+  else
+    local message=$(echo "${response}" | jq -e ".error.message")
+    if [ -n "${message}" ]; then
+      data="{\"message\":${message}}"
+    else
+      data="{\"message\":null}"
+    fi
+
+    echo "${data}"
+  fi
+
+  rm "${temp_response}"
+
+  return ${returncode}
+}
+
+elements_signrawtransaction() {
+  trace "Entering elements_signrawtransaction()..."
+
+  local request=${1}
+  local rawtx=$(echo "${request}" | jq -r ".hex")
+  trace "[elements_signrawtransaction] rawtx=${rawtx}"
+
+  local response
+
+  local data='{"method":"signrawtransactionwithwallet","params":["'${rawtx}'"]}'
+
+  response=$(send_to_elements_spender_node "${data}")
+
+  local returncode=$?
+  trace_rc ${returncode}
+  trace "[elements_signrawtransaction] response=${response}"
+
+  if [ "${returncode}" -eq 0 ]; then
+    local data=$(echo ${response} | jq -rc ".result")
+  else
+    local message=$(echo "${response}" | jq -e ".error.message")
+    if [ -n "${message}" ]; then
+      data="{\"message\":${message}}"
+    else
+      data="{\"message\":null}"
+    fi
+  fi
+
+  trace "[elements_signrawtransaction] responding=${data}"
+
+  echo "${data}"
+
+  return ${returncode}
+}
+
+elements_sendrawtransaction() {
+  trace "Entering elements_sendrawtransaction()..."
+
+  local request=${1}
+  local rawtx=$(echo "${request}" | jq -r ".hex")
+  trace "[elements_sendrawtransaction] rawtx=${rawtx}"
+  local maxfeerate=$(echo "${request}" | jq -r ".maxfeerate // 0.1")
+  trace "[elements_sendrawtransaction] maxfeerate=${maxfeerate}"
+
+  local response
+
+  local data='{"method":"sendrawtransaction","params":["'${rawtx}'",'${maxfeerate}']}'
+
+  response=$(send_to_elements_spender_node "${data}")
+
+  local returncode=$?
+  trace_rc ${returncode}
+  trace "[elements_sendrawtransaction] response=${response}"
+
+  echo "${response}"
+
+  return ${returncode}
+}
