@@ -3,6 +3,50 @@
 . ./trace.sh
 . ./sendtoelementsnode.sh
 
+elements_listunspent() {
+  trace "Entering elements_listunspent()..."
+
+  local request=${1}
+  local minconf=$(echo "${request}" | jq -r ".minconf // 0")
+  trace "[elements_listunspent] minconf=${minconf}"
+  local maxconf=$(echo "${request}" | jq -r ".maxconf // null")
+  trace "[elements_listunspent] maxconf=${maxconf}"
+  local addresses=$(echo "${request}" | jq -r ".addresses // []")
+  trace "[elements_listunspent] addresses=${addresses}"
+
+  local minamount=$(echo "${request}" | jq -r ".minamount // 0")
+  trace "[elements_listunspent] minamount=${minamount}"
+  local maxamount=$(echo "${request}" | jq -r ".maxamount // 9999999")
+  trace "[elements_listunspent] maxamount=${maxamount}"
+  local maxcount=$(echo "${request}" | jq -r ".maxcount // 9999999")
+  trace "[elements_listunspent] maxcount=${maxcount}"
+  local asset=$(echo "${request}" | jq -r ".asset // ''")
+  trace "[elements_listunspent] asset=${asset}"
+
+  local data='{"method":"listunspent","params":['${minconf}','${maxconf}','${addresses}',false,{"minimumAmount":'${minamount}',"maximumAmount":'${maxamount}',"maximumCount":'${maxcount}',"asset":"'"${asset}"'"}]}'
+
+  local response=$(send_to_elements_spender_node "${data}")
+
+  local returncode=$?
+  trace_rc ${returncode}
+  trace "[elements_listunspent] response=${response}"
+
+  if [ "${returncode}" -eq 0 ]; then
+    local utxos=$(echo ${response} | jq -rc ".result")
+    trace "[elements_listunspent] utxos=${utxos}"
+
+    data="{\"utxos\":${utxos}}"
+  else
+    trace "[elements_listunspent] Couldn't get utxos!"
+    data=""
+  fi
+
+  trace "[elements_listunspent] responding=${data}"
+  echo "${data}"
+
+  return ${returncode}
+}
+
 elements_spend() {
   trace "Entering elements_spend()..."
 

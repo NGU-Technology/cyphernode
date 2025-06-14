@@ -629,6 +629,9 @@ test_elements_spender_functions() {
 
   # action_elements_sendrawtransaction=spender
   test_authorization "elements_sendrawtransaction" "${token}" ${has_access} || return 200
+
+  # action_elements_listunspent=spender
+  test_authorization "elements_listunspent" "${token}" ${has_access} || return 205
 }
 
 test_admin_functions() {

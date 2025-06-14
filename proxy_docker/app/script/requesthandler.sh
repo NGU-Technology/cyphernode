@@ -1202,6 +1202,23 @@ main() {
           response=$(elements_sendrawtransaction "${line}")
           returncode=$?
           ;;
+        elements_listunspent)
+          # All params are optional:
+          #
+          # curl (GET) http://192.168.111.152:8080/elements_listunspent
+          # curl (POST) http://192.168.111.152:8080/elements_listunspent
+          # BODY {"minconf":1,"maxconf":9999999,"addresses":["el1qq2t6xuv8jt5jdxsuzw0waeuylp29fulk8arhkmvmrygkr775mulqqeuq6d49nkggg5d6fgwkga9mudsmdlcmqme9d7fmq53tp"]}
+          # BODY {"minamount":0.0001,"maxamount":0.1,"maxcount":10}
+          # BODY {"minamount":0.0001,"maxamount":0.1,"maxcount":10,"asset":"bc5ac68d102a16069c68de127773473eee0a6bc760689ce76024a3cfbfec31cf"}
+
+          if [ "$http_method" = "POST" ]; then
+            response=$(elements_listunspent "${line}")
+          else
+            response=$(elements_listunspent "{}")
+          fi
+
+          returncode=$?
+          ;;
         check_bolt11_mrh)
           # POST http://192.168.111.152:8080/check_bolt11_mrh
           # BODY {"bolt11":"lntb1pdca82tpp5gv8mn5jqlj6xztpnt4r472zcyrwf3y2c3cvm4uzg2gqcnj90f83qdp2gf5hgcm0d9hzqnm4w3kx2apqdaexgetjyq3nwvpcxgcqp2g3d86wwdfvyxcz7kce7d3n26d2rw3wf5tzpm2m5fl2z3mm8msa3xk8nv2y32gmzlhwjved980mcmkgq83u9wafq9n4w28amnmwzujgqpmapcr3"}
