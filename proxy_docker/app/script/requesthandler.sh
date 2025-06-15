@@ -998,6 +998,13 @@ main() {
           response=$(elements_spend "${line}")
           returncode=$?
           ;;
+        elements_sendmany)
+          # POST http://192.168.111.152:8080/elements_sendmany
+          # BODY {"amounts":{"el1qqg8f8pv5yzrj4xw5rn39y6elxgvw5ff20wpxja5xvqs5klyzjh5krgdcqlaf7qgs0cw2p0uj7uwxzm7k7q9ggx0z7x73yeytd":0.00233,"el1qqtm6kyvej0m722txk2vmetggfk006xu2fx6wdkvm3dqv7hqpvv0ul6ptpsv8kp9jv96aekc4up238fsgkzexcwe9mvp36q38z":0.00233},"confTarget":6,"replaceable":true,"subtractfeefromamount":false}
+
+          response=$(elements_sendmany "${line}")
+          returncode=$?
+          ;;
         elements_getwalletinfo)
           # curl (GET) 192.168.111.152:8080/elements_getwalletinfo
 

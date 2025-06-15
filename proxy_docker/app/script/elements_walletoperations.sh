@@ -148,6 +148,97 @@ elements_spend() {
   return ${returncode}
 }
 
+elements_sendmany() {
+  trace "Entering elements_sendmany()..."
+
+  local data
+  local request=${1}
+  local amounts=$(echo "${request}" | jq -r ".amounts")
+  trace "[elements_sendmany] amounts=${amounts}"
+  local conf_target=$(echo "${request}" | jq ".confTarget")
+  trace "[elements_sendmany] confTarget=${conf_target}"
+  local replaceable=$(echo "${request}" | jq ".replaceable")
+  trace "[elements_sendmany] replaceable=${replaceable}"
+  local fee_rate=$(echo "${request}" | jq ".feeRate")
+  local output_assets=$(echo "${request}" | jq -r ".outputAssets")
+
+  local id_inserted
+  local tx_details
+  local tx_raw_details
+
+  local response=$(send_to_elements_spender_node "{\"method\":\"sendmany\",\"params\":[\"\", ${amounts},6,\"\",[],${replaceable},${conf_target},\"unset\",${output_assets},true,${fee_rate}]}")
+
+  local returncode=$?
+  trace_rc ${returncode}
+  trace "[elements_sendmany] response=${response}"
+
+  if [ "${returncode}" -eq 0 ]; then
+    local txid=$(echo "${response}" | jq -r ".result")
+    trace "[elements_sendmany] txid=${txid}"
+
+    # Let's get transaction details on the spending wallet so that we have fee information
+    tx_details=$(elements_get_transaction "${txid}" "spender")
+    tx_raw_details=$(elements_get_rawtransaction "${txid}" | tr -d '\n')
+
+    # Amounts and fees are negative when spending so we absolute those fields
+    local tx_hash=$(echo "${tx_raw_details}" | jq -r '.result.hash')
+    local tx_ts_firstseen=$(echo "${tx_details}" | jq '.result.timereceived')
+    # @todo might need to handle other assetIds here
+    local tx_amount=$(echo "${tx_details}" | jq '.result.amount.bitcoin | fabs' | awk '{ printf "%.8f", $0 }')
+    local tx_size=$(echo "${tx_raw_details}" | jq '.result.size')
+    local tx_vsize=$(echo "${tx_raw_details}" | jq '.result.vsize')
+    local tx_replaceable=$(echo "${tx_details}" | jq -r '.result."bip125-replaceable"')
+    tx_replaceable=$([ ${tx_replaceable} = "yes" ] && echo "true" || echo "false")
+    local fees=$(echo "${tx_details}" | jq '.result.fee.bitcoin | fabs' | awk '{ printf "%.8f", $0 }')
+
+    ########################################################################################################
+    # Let's publish the event if needed
+    local event_message
+    event_message=$(echo "${request}" | jq -er ".eventMessage")
+    if [ "$?" -ne "0" ]; then
+      # event_message tag null, so there's no event_message
+      trace "[elements_sendmany] event_message="
+      event_message=
+    else
+      # There's an event message, let's publish it!
+
+      trace "[elements_sendmany] mosquitto_pub -h broker -t elements_sendmany -m \"{\"txid\":\"${txid}\",\"amounts\":${amounts},\"tx_amount\":${tx_amount},\"fees\":\"${fees}\",\"eventMessage\":\"${event_message}\"}\""
+      response=$(mosquitto_pub -h broker -t elements_sendmany -m "{\"txid\":\"${txid}\",\"amounts\":${amounts},\"tx_amount\":${tx_amount},\"fees\":\"${fees}\",\"eventMessage\":\"${event_message}\"}")
+      returncode=$?
+      trace_rc ${returncode}
+    fi
+    ########################################################################################################
+
+    # Let's insert the txid in our little DB -- then we'll already have it when receiving confirmation
+    id_inserted=$(sql "INSERT INTO elements_tx (txid, hash, confirmations, timereceived, fee, size, vsize, is_replaceable, conf_target)"\
+" VALUES ('${txid}', '${tx_hash}', 0, ${tx_ts_firstseen}, ${fees}, ${tx_size}, ${tx_vsize}, ${tx_replaceable}, ${conf_target})"\
+" RETURNING id" \
+    "SELECT id FROM elements_tx WHERE txid='${txid}'")
+    trace_rc $?
+
+    echo "${amounts}" | jq -r 'to_entries[] | "\(.key) \(.value)"' | while read -r address amount; do
+      sql "INSERT INTO elements_recipient (address, amount, tx_id) VALUES ('${address}', ${amount}, ${id_inserted})"\
+" ON CONFLICT DO NOTHING"
+      trace_rc $?
+    done
+
+    data="{\"status\":\"accepted\""
+    data="${data},\"txid\":\"${txid}\",\"hash\":\"${tx_hash}\",\"details\":{\"amounts\":${amounts},\"tx_amount\":${tx_amount},\"firstseen\":${tx_ts_firstseen},\"size\":${tx_size},\"vsize\":${tx_vsize},\"replaceable\":${tx_replaceable},\"fee\":${fees}}}"
+  else
+    local message=$(echo "${response}" | jq -e ".error.message")
+    if [ -n "${message}" ]; then
+      data="{\"message\":${message}}"
+    else
+      data="{\"message\":null}"
+    fi
+  fi
+
+  trace "[elements_sendmany] responding=${data}"
+  echo "${data}"
+
+  return ${returncode}
+}
+
 elements_bumpfee() {
   trace "Entering elements_bumpfee()..."
 

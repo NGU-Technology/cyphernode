@@ -606,6 +606,9 @@ test_elements_spender_functions() {
   # action_elements_spend=spender
   test_authorization "elements_spend" "${token}" ${has_access} || return 40
 
+  # action_elements_sendmany=spender
+  test_authorization "elements_sendmany" "${token}" ${has_access} || return 170
+
   # action_elements_deriveindex=spender
   test_authorization "elements_deriveindex" "${token}" ${has_access} || return 60
 
