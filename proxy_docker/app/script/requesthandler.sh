@@ -797,6 +797,20 @@ main() {
           response=$(derivepubpath_bitcoind "${line}")
           returncode=$?
           ;;
+        deriveaddresses)
+          # POST http://192.168.111.152:8080/deriveaddresses
+          # BODY {"descriptor":"phk(tpubD6NzVbkrYhZ4YR3QK2tyfMMvBghAvqtNaNK1LTyDWcRHLcMUm3ZN2cGm5BS3MhCRCeCkXQkTXXjiJgqxpqXK7PeUSp86DTTgkLpcjMtpKWk)","range":"[0,2]"}
+
+          response=$(deriveaddresses "${line}")
+          returncode=$?
+          ;;
+        getdescriptorinfo)
+          # POST http://192.168.111.152:8080/getdescriptorinfo
+          # BODY {"descriptor":"phk(tpubD6NzVbkrYhZ4YR3QK2tyfMMvBghAvqtNaNK1LTyDWcRHLcMUm3ZN2cGm5BS3MhCRCeCkXQkTXXjiJgqxpqXK7PeUSp86DTTgkLpcjMtpKWk)"}
+
+          response=$(getdescriptorinfo "${line}")
+          returncode=$?
+          ;;
         getmempoolinfo)
           # curl GET http://192.168.111.152:8080/getmempoolinfo
 

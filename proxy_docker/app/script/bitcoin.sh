@@ -289,6 +289,69 @@ derivepubpath_bitcoind() {
   return $?
 }
 
+deriveaddresses() {
+  trace "Entering deriveaddresses()..."
+
+  # POST http://192.168.111.152:8080/deriveaddresses
+  # BODY {"descriptor":"phk(tpubD6NzVbkrYhZ4YR3QK2tyfMMvBghAvqtNaNK1LTyDWcRHLcMUm3ZN2cGm5BS3MhCRCeCkXQkTXXjiJgqxpqXK7PeUSp86DTTgkLpcjMtpKWk)","range":"[0,2]"}
+
+  local descriptor=$(echo "${1}" | jq -r ".descriptor")
+  trace "[deriveaddresses] descriptor=${descriptor}"
+
+  local range=$(echo "${1}" | jq -r ".range")
+  trace "[deriveaddresses] range=${range}"
+
+  local data="{\"method\":\"deriveaddresses\",\"params\":{\"descriptor\":\"${descriptor}\",\"range\":${range}}}"
+
+  trace "[deriveaddresses] data=${data}"
+  local response=$(send_to_watcher_node "${data}")
+  local returncode=$?
+
+  trace_rc ${returncode}
+
+  trace "[deriveaddresses] response=${response}"
+  if [ ${returncode} -ne 0 ]; then
+    trace "[deriveaddresses] Failed to derive addresses"
+    echo "{\"error\":\"Failed to derive addresses\"}"
+    return ${returncode}
+  fi
+
+  # return the result
+  echo "${response}" | jq -Mc ".result"
+
+  return ${returncode}
+}
+
+getdescriptorinfo() {
+    trace "Entering getdescriptorinfo()..."
+
+    # POST http://192.168.111.152:8080/getdescriptorinfo
+    # BODY {"descriptor":"phk(tpubD6NzVbkrYhZ4YR3QK2tyfMMvBghAvqtNaNK1LTyDWcRHLcMUm3ZN2cGm5BS3MhCRCeCkXQkTXXjiJgqxpqXK7PeUSp86DTTgkLpcjMtpKWk)"}
+
+    local descriptor=$(echo "${1}" | jq -r ".descriptor")
+    trace "[getdescriptorinfo] descriptor=${descriptor}"
+
+    local data="{\"method\":\"getdescriptorinfo\",\"params\":[\"${descriptor}\"]}"
+
+    trace "[getdescriptorinfo] data=${data}"
+    local response=$(send_to_watcher_node "${data}")
+    local returncode=$?
+
+    trace_rc ${returncode}
+
+    trace "[getdescriptorinfo] response=${response}"
+    if [ ${returncode} -ne 0 ]; then
+      trace "[getdescriptorinfo] Failed to get descriptor info"
+      echo "{\"error\":\"Failed to get descriptor info\"}"
+      return ${returncode}
+    fi
+
+    # return the result
+    echo "${response}" | jq -Mc ".result"
+
+    return ${returncode}
+}
+
 getfeeratefromurl() {
   local url=$1
   local priority=$2
