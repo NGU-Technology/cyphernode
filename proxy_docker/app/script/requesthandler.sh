@@ -983,6 +983,30 @@ main() {
           response=$(elements_get_txns_spending "$(echo "${line}" | cut -d ' ' -f2 | cut -d '/' -f3)" "$(echo "${line}" | cut -d ' ' -f2 | cut -d '/' -f4)")
           returncode=$?
           ;;
+        elements_getbalance)
+          # curl (GET) http://192.168.111.152:8080/elements_getbalance
+          # curl (GET) http://192.168.111.152:8080/elements_getbalance/01 (spending wallet number)
+
+          walletname=$(echo "${line}" | cut -d ' ' -f2 | cut -d '/' -f3)
+          if [ "${walletname}" = "elements_getbalance" ]; then
+            walletname=""
+          fi
+
+          response=$(elements_getbalance "${walletname}")
+          returncode=$?
+          ;;
+        elements_getbalances)
+          # curl (GET) http://192.168.111.152:8080/elements_getbalances
+          # curl (GET) http://192.168.111.152:8080/elements_getbalances/01 (spending wallet number)
+
+          walletname=$(echo "${line}" | cut -d ' ' -f2 | cut -d '/' -f3)
+          if [ "${walletname}" = "elements_getbalances" ]; then
+            walletname=""
+          fi
+
+          response=$(elements_getbalances "${walletname}")
+          returncode=$?
+          ;;
         elements_getnewaddress)
           # curl (GET) http://192.168.111.152:8080/elements_getnewaddress
           # curl (GET) http://192.168.111.152:8080/elements_getnewaddress/bech32
