@@ -161,13 +161,13 @@ elements_sendmany() {
   trace "[elements_sendmany] replaceable=${replaceable}"
   local fee_rate=$(echo "${request}" | jq ".feeRate")
   local output_assets=$(echo "${request}" | jq -r ".outputAssets")
+  local response
 
   local id_inserted
   local tx_details
   local tx_raw_details
 
-  local response=$(send_to_elements_spender_node "{\"method\":\"sendmany\",\"params\":[\"\", ${amounts},6,\"\",[],${replaceable},${conf_target},\"unset\",${output_assets},true,${fee_rate}]}")
-
+  response=$(send_to_elements_spender_node "{\"method\":\"sendmany\",\"params\":[\"\", ${amounts},6,\"\",[],${replaceable},${conf_target},\"unset\",${output_assets},true,${fee_rate}]}")
   local returncode=$?
   trace_rc ${returncode}
   trace "[elements_sendmany] response=${response}"
