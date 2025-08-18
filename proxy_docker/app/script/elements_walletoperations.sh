@@ -462,6 +462,73 @@ elements_getnewaddress() {
   return ${returncode}
 }
 
+elements_lockunspent() {
+  trace "Entering elements_lockunspent()..."
+
+  local request=${1}
+  local unlock=$(echo "${request}" | jq -r ".unlock // false")
+  local utxos=$(echo "${request}" | jq -r ".utxos")
+  local data='{"method":"lockunspent","params":['${unlock}','${utxos}']}'
+
+  local response=$(send_to_elements_spender_node "${data}")
+
+  local returncode=$?
+  trace_rc ${returncode}
+  trace "[elements_lockunspent] response=${response}"
+
+  if [ "${returncode}" -eq 0 ]; then
+    local success=$(echo ${response} | jq ".result")
+    trace "[elements_lockunspent] success=${success}"
+
+    data="{\"success\":${success}}"
+  else
+    trace "[elements_lockunspent] Couldn't lock/unlock unspent!"
+    local message=$(echo "${response}" | jq -e ".error.message")
+    if [ -n "${message}" ]; then
+      data="{\"message\":${message}}"
+    else
+      data="{\"message\":null}"
+    fi
+  fi
+
+  trace "[elements_lockunspent] responding=${data}"
+  echo "${data}"
+
+  return ${returncode}
+}
+
+elements_listlockunspent() {
+  trace "Entering elements_listlockunspent()..."
+
+  local data='{"method":"listlockunspent"}'
+
+  local response=$(send_to_elements_spender_node "${data}")
+
+  local returncode=$?
+  trace_rc ${returncode}
+  trace "[elements_listlockunspent] response=${response}"
+
+  if [ "${returncode}" -eq 0 ]; then
+    local locked_utxos=$(echo ${response} | jq ".result")
+    trace "[elements_listlockunspent] locked_utxos=${locked_utxos}"
+
+    data="{\"locked_utxos\":${locked_utxos}}"
+  else
+    trace "[elements_listlockunspent] Couldn't list locked unspent!"
+    local message=$(echo "${response}" | jq -e ".error.message")
+    if [ -n "${message}" ]; then
+      data="{\"message\":${message}}"
+    else
+      data="{\"message\":null}"
+    fi
+  fi
+
+  trace "[elements_listlockunspent] responding=${data}"
+  echo "${data}"
+
+  return ${returncode}
+}
+
 elements_create_wallet() {
   trace "[Entering elements_create_wallet()]"
 

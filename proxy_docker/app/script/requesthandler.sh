@@ -1272,6 +1272,25 @@ main() {
           response=$(elements_getaddressinfo "${address}" true)
           returncode=$?
           ;;
+        elements_lockunspent)
+          # POST http://192.168.111.152:8080/elements_lockunspent
+          # BODY {"unlock":true,"utxos":[{"txid":"af867c86000da76df7ddb1054b273ca9e034e8c89d049b5b2795f9f590f67648","vout":0}]}
+          # BODY {"unlock":false,"utxos":[{"txid":"af867c86000da76df7ddb1054b273ca9e034e8c89d049b5b2795f9f590f67648","vout":0}]}
+
+          response=$(elements_lockunspent "${line}")
+          returncode=$?
+          ;;
+        elements_listlockunspent)
+          # curl (GET) http://192.168.111.152:8080/elements_listlockunspent
+
+          walletname=$(echo "${line}" | cut -d ' ' -f2 | cut -d '/' -f3)
+          if [ "${walletname}" = "listlockunspent" ]; then
+            walletname=""
+          fi
+
+          response=$(listlockunspent "${walletname}")
+          returncode=$?
+          ;;
         check_bolt11_mrh)
           # POST http://192.168.111.152:8080/check_bolt11_mrh
           # BODY {"bolt11":"lntb1pdca82tpp5gv8mn5jqlj6xztpnt4r472zcyrwf3y2c3cvm4uzg2gqcnj90f83qdp2gf5hgcm0d9hzqnm4w3kx2apqdaexgetjyq3nwvpcxgcqp2g3d86wwdfvyxcz7kce7d3n26d2rw3wf5tzpm2m5fl2z3mm8msa3xk8nv2y32gmzlhwjved980mcmkgq83u9wafq9n4w28amnmwzujgqpmapcr3"}
