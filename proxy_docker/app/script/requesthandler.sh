@@ -1288,7 +1288,7 @@ main() {
             walletname=""
           fi
 
-          response=$(listlockunspent "${walletname}")
+          response=$(elements_listlockunspent "${walletname}")
           returncode=$?
           ;;
         check_bolt11_mrh)
