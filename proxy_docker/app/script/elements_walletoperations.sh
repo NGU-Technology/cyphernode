@@ -25,7 +25,8 @@ elements_listunspent() {
 
   local data='{"method":"listunspent","params":['${minconf}','${maxconf}','${addresses}',false,{"minimumAmount":'${minamount}',"maximumAmount":'${maxamount}',"maximumCount":'${maxcount}',"asset":"'"${asset}"'"}]}'
 
-  local response=$(send_to_elements_spender_node "${data}")
+  local response
+  response=$(send_to_elements_spender_node "${data}")
 
   local returncode=$?
   trace_rc ${returncode}
@@ -470,9 +471,10 @@ elements_lockunspent() {
   local utxos=$(echo "${request}" | jq -r ".utxos")
   local data='{"method":"lockunspent","params":['${unlock}','${utxos}']}'
 
-  local response=$(send_to_elements_spender_node "${data}")
-
+  local response
+  response=$(send_to_elements_spender_node "${data}")
   local returncode=$?
+
   trace_rc ${returncode}
   trace "[elements_lockunspent] response=${response}"
 
@@ -502,7 +504,8 @@ elements_listlockunspent() {
 
   local data='{"method":"listlockunspent"}'
 
-  local response=$(send_to_elements_spender_node "${data}")
+  local response
+  response=$(send_to_elements_spender_node "${data}")
 
   local returncode=$?
   trace_rc ${returncode}
